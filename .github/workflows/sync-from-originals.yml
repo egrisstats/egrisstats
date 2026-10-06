@@ -1,0 +1,60 @@
+# Keeps the EGRISS copies up to date with the original repositories.
+# Runs every day and can also be started by hand (Actions tab > "Sync from originals" > Run workflow).
+#
+# Needs one secret in this repository: SYNC_TOKEN, an access token of the egrisstats account
+# with permission to write to its repositories (see README, "Keeping the copies in sync").
+#
+# The list of repositories is in sync/repos.txt. To add one, add a line "owner/name".
+# A missing EGRISS copy is created automatically on the next run.
+#
+# Pushes are never forced: if someone has committed directly to an EGRISS copy, that
+# repository is skipped and reported instead of being overwritten.
+
+name: Sync from originals
+on:
+  schedule:
+    - cron: '17 3 * * *'   # every day at 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy new commits, branches and tags
+        env:
+          TOKEN: ${{ secrets.SYNC_TOKEN }}
+          DEST: egrisstats
+        run: |
+          set -u
+          if [ -z "$TOKEN" ]; then echo "::error::SYNC_TOKEN secret is missing"; exit 1; fi
+          failed=""
+          while read -r src; do
+            src="$(echo "$src" | sed 's/#.*//' | xargs)"; [ -z "$src" ] && continue
+            name="${src#*/}"
+            echo "::group::$src -> $DEST/$name"
+            # create the EGRISS copy if it does not exist yet
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" "https://api.github.com/repos/$DEST/$name")
+            if [ "$code" = "404" ]; then
+              desc=$(curl -s "https://api.github.com/repos/$src" | jq -r '.description // ""')
+              curl -s -X POST -H "Authorization: Bearer $TOKEN" https://api.github.com/user/repos \
+                -d "$(jq -n --arg n "$name" --arg d "$desc" '{name:$n, description:$d, private:false}')" >/dev/null
+              echo "created $DEST/$name"
+            fi
+            rm -rf work.git
+            if ! git clone -q --mirror "https://github.com/$src.git" work.git; then
+              failed="$failed $src(clone)"; echo "::endgroup::"; continue
+            fi
+            if git -C work.git push "https://x-access-token:$TOKEN@github.com/$DEST/$name.git" \
+                 'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'; then
+              echo "up to date"
+            else
+              failed="$failed $src"
+              echo "::warning::$DEST/$name has commits the original does not have, so it was not updated"
+            fi
+            echo "::endgroup::"
+          done < sync/repos.txt
+          if [ -n "$failed" ]; then echo "::error::Not synced:$failed"; exit 1; fi
