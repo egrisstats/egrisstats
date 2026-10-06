@@ -1,0 +1,12 @@
+# Original repositories copied into the egrisstats account every day.
+# One "owner/name" per line. Lines starting with # are ignored.
+mitrovif/EGRISS_GAIN_AR_Split_Script
+mitrovif/EGRISS_GAIN_Clean_Scripts
+mitrovif/EGRISS_GAIN_PowerBI
+mitrovif/EGRISS_Reach_Media
+mitrovif/GAIN-Dashboard
+mitrovif/GAIN_post-collection
+mitrovif/gain-data-chatbot
+mitrovif/gain-evidence-pipeline
+mitrovif/gain_sdg_workstream
+mitrovif/idq-map
