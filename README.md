@@ -15,7 +15,7 @@
 
 The **Expert Group on Refugee, IDP and Statelessness Statistics (EGRISS)** brings together national statistical offices, international organisations and other experts to improve official statistics on refugees, internally displaced persons and stateless persons. It developed the three international recommendations endorsed by the UN Statistical Commission: the **IRRS** (refugees), **IRIS** (internally displaced persons) and **IROSS** (statelessness).
 
-This GitHub account holds the code and data tools of the **EGRISS Secretariat**, hosted by UNHCR's Statistics and Demographics Section in Copenhagen.
+This GitHub account holds the code and data tools of the **EGRISS Secretariat**, hosted by UNHCR in Copenhagen.
 
 ## Repositories
 
